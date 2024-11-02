@@ -1,11 +1,19 @@
-import React, { forwardRef } from 'react'
-import ReactQuill from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
+import React, { forwardRef } from 'react';
+import ReactQuill from 'react-quill';
 
-const QuillWrapper = forwardRef((props: any, ref: any) => {
-  return <ReactQuill {...props} ref={ref} />
-})
+interface QuillWrapperProps {
+  theme: string;
+  value: string;
+  onChange: (content: string) => void;
+  modules: object;
+  formats: string[];
+  className?: string;
+}
 
-QuillWrapper.displayName = 'QuillWrapper'
+const QuillWrapper = forwardRef<ReactQuill, QuillWrapperProps>((props, ref) => {
+  return <ReactQuill {...props} ref={ref as React.RefObject<ReactQuill>} />;
+});
 
-export default QuillWrapper
+QuillWrapper.displayName = 'QuillWrapper';
+
+export default QuillWrapper;

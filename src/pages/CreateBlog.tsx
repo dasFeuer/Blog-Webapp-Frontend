@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { createBlog } from "../services/api";
 import { useAuth } from "../context/AuthContext";
@@ -12,6 +12,7 @@ export default function CreateBlog() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
+  const quillRef = useRef(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +97,7 @@ export default function CreateBlog() {
             Content
           </label>
           <QuillWrapper
+            ref={quillRef}
             theme="snow"
             value={content}
             onChange={setContent}
