@@ -1,0 +1,7 @@
+.ql-editor {
+    min-height: 200px;
+  }
+  
+  .font-mono .ql-editor {
+    font-family: monospace;
+  }

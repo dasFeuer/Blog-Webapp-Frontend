@@ -2,15 +2,18 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getBlogById, getCommentsByBlogId, createComment, updateComment, deleteComment, deleteBlog } from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import DOMPurify from 'dompurify'
 
 interface Blog {
   id: number;
   title: string;
   content: string;
+  contentType: string;
   user: {
     id: number;
     username: string;
   };
+  createdAt: string;
 }
 
 interface Comment {
@@ -20,6 +23,7 @@ interface Comment {
     id: number;
     username: string;
   };
+  createdAt: string;
 }
 
 export default function BlogDetail() {
@@ -101,19 +105,33 @@ export default function BlogDetail() {
     }
   }
 
-  if (loading) return <div>Loading...</div>
-  if (error) return <div className="text-red-500">{error}</div>
-  if (!blog) return <div>Blog not found</div>
+  if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>
+  if (error) return <div className="text-red-500 text-center">{error}</div>
+  if (!blog) return <div className="text-center">Blog not found</div>
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <h2 className="text-3xl font-bold mb-4">{blog.title}</h2>
-      <p className="text-gray-600 mb-8">{blog.content}</p>
-      <p className="text-sm text-gray-500 mb-8">By: {blog.user.username}</p>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <article className="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div className="p-6">
+          <h1 className="text-4xl font-bold mb-4">{blog.title}</h1>
+          <p className="text-gray-600 mb-4">
+            By {blog.user.username} on {new Date(blog.createdAt).toLocaleDateString()}
+          </p>
+          <div className="prose max-w-none">
+            {blog.contentType === 'code' ? (
+              <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto">
+                <code dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content) }} />
+              </pre>
+            ) : (
+              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content) }} />
+            )}
+          </div>
+        </div>
+      </article>
       
       {user && (user.id === blog.user.id || user.role === 'ADMIN') && (
-        <div className="mb-8">
-          <Link to={`/edit-blog/${blog.id}`} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mr-2">
+        <div className="mt-8 space-x-4">
+          <Link to={`/edit-blog/${blog.id}`} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
             Edit Blog
           </Link>
           <button onClick={handleDeleteBlog} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
@@ -122,64 +140,72 @@ export default function BlogDetail() {
         </div>
       )}
       
-      <h3 className="text-2xl font-bold mb-4">Comments</h3>
-      {comments.map((comment) => (
-        <div key={comment.id} className="bg-white p-4 rounded shadow mb-4">
-          {editingCommentId === comment.id ? (
-            <div>
-              <textarea
-                value={editedCommentContent}
-                onChange={(e) => setEditedCommentContent(e.target.value)}
-                className="w-full p-2 border rounded mb-2"
-              />
-              <button 
-                onClick={() => handleUpdateComment(comment.id)}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mr-2"
-              >
-                Save
-              </button>
-              <button 
-                onClick={() => setEditingCommentId(null)}
-                className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <div>
-              <p>{comment.content}</p>
-              <p className="text-sm text-gray-500 mt-2">By: {comment.user.username}</p>
-              {user && (user.id === comment.user.id || user.role === 'ADMIN') && (
-                <div className="mt-2">
+      <section className="mt-12">
+        <h2 className="text-2xl font-bold mb-6">Comments</h2>
+        {comments.map((comment) => (
+          <div key={comment.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
+            {editingCommentId === comment.id ? (
+              <div>
+                <textarea
+                  value={editedCommentContent}
+                  onChange={(e) => setEditedCommentContent(e.target.value)}
+                  className="w-full p-2 border rounded mb-2"
+                  rows={3}
+                />
+                <div className="flex space-x-2">
                   <button 
-                    onClick={() => handleEditComment(comment.id, comment.content)}
-                    className="text-blue-600 hover:underline mr-2"
+                    onClick={() => handleUpdateComment(comment.id)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                   >
-                    Edit
+                    Save
                   </button>
                   <button 
-                    onClick={() => handleDeleteComment(comment.id)}
-                    className="text-red-600 hover:underline"
+                    onClick={() => setEditingCommentId(null)}
+                    className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
                   >
-                    Delete
+                    Cancel
                   </button>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-      ))}
+              </div>
+            ) : (
+              <div>
+                <p className="text-gray-800">{comment.content}</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  By {comment.user.username} on {new Date(comment.createdAt).toLocaleDateString()}
+                </p>
+                {user && (user.id === comment.user.id || user.role === 'ADMIN') && (
+                  <div className="mt-4 space-x-2">
+                    <button 
+                      onClick={() => handleEditComment(comment.id, comment.content)}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteComment(comment.id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </section>
       
       {user && (
         <form onSubmit={handleCommentSubmit} className="mt-8">
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="w-full p-4 border rounded-lg shadow-inner"
             placeholder="Write a comment..."
+            rows={4}
             required
           />
-          <button type="submit" className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          <button type="submit" className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
             Post Comment
           </button>
         </form>

@@ -12,6 +12,8 @@ import CreateBlog from './pages/CreateBlog'
 import EditBlog from './pages/EditBlog'
 import AdminDashboard from './pages/AdminDashboard'
 import PrivateRoute from './components/PrivateRoute'
+import './quill-custom.css'
+import './blog-content.css'
 
 export default function App() {
   return (
